@@ -292,9 +292,19 @@ Tahapan ini memastikan bahwa seluruh gambar dan file terkait dapat diakses secar
   - Sampah yang Bisa Didaur Ulang
 
 ```python
+import os
+
+# Pastikan dataset_path sudah didefinisikan dengan benar:
+# dataset_path = "/content/drive/MyDrive/Dataset Capstone Project"
+
+# Menggunakan os.walk untuk mencari file gambar secara rekursif di setiap kategori
 for category in os.listdir(dataset_path):
     category_path = os.path.join(dataset_path, category)
-    image_files = [f for f in os.listdir(category_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    image_files = []  # Inisialisasi list untuk menyimpan file gambar
+    for root, dirs, files in os.walk(category_path):
+        for file in files:
+            if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_files.append(os.path.join(root, file))
     print(f"{category}: {len(image_files)} gambar")
 ```
 
@@ -416,9 +426,5 @@ Pengambilan label secara otomatis dari struktur folder menyederhanakan proses da
 
 5. **Efisiensi Proses:**  
    Proses preprocessing yang terstruktur dan otomatis meningkatkan efisiensi pipeline training, sehingga mempercepat eksperimen dan iterasi model.
-
----
-
-Dengan mengikuti tahapan-tahapan Data Preparation yang berurutan di atas, data yang digunakan dalam proyek ini dapat diproses dengan baik untuk mendukung pembangunan model machine learning yang robust dan akurat. Teknik-teknik ini tidak hanya meningkatkan kualitas data yang masuk ke dalam model, tetapi juga memberikan dasar yang kuat untuk evaluasi performa model di tahap selanjutnya.
 
 ---
