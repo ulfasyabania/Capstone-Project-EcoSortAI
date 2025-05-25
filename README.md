@@ -99,3 +99,165 @@ Dengan kombinasi pendekatan utama dan alternatif tersebut, proyek ini bertujuan 
 
 ---
 
+## Data Understanding
+
+### 1. Sumber Data
+
+Proyek ini menggunakan dua sumber dataset eksternal yang telah diunduh dari Kaggle:
+
+- **Dataset 1: Recyclable and Household Waste Classification**  
+  - **Tautan:** [Recyclable and Household Waste Classification](https://www.kaggle.com/datasets/alistairking/recyclable-and-household-waste-classification)  
+  - **Deskripsi Umum:**  
+    Dataset ini merupakan kumpulan citra berkualitas tinggi yang menggambarkan sampah rumah tangga serta bahan-bahan yang dapat didaur ulang. Data diorganisasikan dalam struktur folder, di mana setiap folder mewakili kategori label. Berdasarkan deskripsi dan sumber terkait, dataset ini diperkirakan terdiri dari sekitar 15.000 gambar dan mencakup ratusan kategori (misalnya, plastik, kertas, kaca, logam, organik, dan lain-lain).  
+  - **Format File:** Gambar dalam format JPG atau PNG dengan resolusi yang konsisten (misalnya, 256×256 piksel).
+
+- **Dataset 2: RealWaste Dataset**  
+  - **Tautan:** [RealWaste](https://www.kaggle.com/datasets/joebeachcapital/realwaste)  
+  - **Deskripsi Umum:**  
+    Dataset ini merupakan kumpulan citra nyata yang diambil di lingkungan landfill (tempat pembuangan akhir). Dataset RealWaste terdiri dari 4.752 gambar yang telah dikumpulkan secara autentik. Setiap gambar telah diberi label berdasarkan material sampah, sehingga menyediakan informasi yang mendalam untuk klasifikasi.  
+  - **Rincian Label dan Jumlah Gambar:**  
+    - Cardboard: 461  
+    - Food Organics: 411  
+    - Glass: 420  
+    - Metal: 790  
+    - Miscellaneous Trash: 495  
+    - Paper: 500  
+    - Plastic: 921  
+    - Textile Trash: 318  
+    - Vegetation: 436  
+  - **Format File:** Gambar berwarna (RGB) dalam resolusi sekitar 524×524 piksel atau resolusi serupa sesuai dengan standar yang diterapkan oleh pengumpul data.
+
+---
+
+### 2. Pembentukan Dataset
+
+Dataset yang digunakan dalam proyek ini dihasilkan dengan mengintegrasi dua sumber data eksternal dari Kaggle tersebut.
+
+Setelah proses pengumpulan, pembersihan, dan penyelarasan, kedua dataset tersebut dikombinasikan dan direstrukturisasi secara mandiri oleh tim untuk menghasilkan satu dataset final yang konsisten dengan kebutuhan proyek. Dataset final ini kemudian dibagi menjadi **5 kategori utama** sesuai dengan fokus proyek, yaitu:
+
+- **Sampah Anorganik**
+- **Sampah Berbahaya**
+- **Sampah Elektronik**
+- **Sampah Organik**
+- **Sampah yang Bisa Didaur Ulang**
+
+Dataset hasil integrasi dan pembagian kategori ini telah disimpan secara terpusat dan dapat diakses melalui Google Drive:  
+[Dataset Capstone Project](https://drive.google.com/drive/folders/1iWAHYIqiK6B8bj5YJqCr98gAF50-hA4S?usp=drive_link)
+
+---
+
+### 3. Deskripsi Fitur dan Variabel
+
+Pada dataset final yang telah disusun, informasi utama yang terdapat di dalamnya adalah:
+
+- **Gambar (Citra):**  
+  Masing-masing instance berupa gambar berformat JPEG atau PNG yang mengilustrasikan berbagai jenis sampah. Gambar memiliki variasi resolusi dan kondisi pencahayaan, mengingat sebagian data diambil dalam kondisi studio (Dataset 1) dan sebagian lagi dalam kondisi nyata (Dataset 2).
+
+- **Label/Kategori:**  
+  Setiap gambar diberi label sesuai dengan salah satu dari 5 kategori:
+  - **Sampah Anorganik:** Meliputi sampah yang umumnya berupa bahan non-organik seperti plastik, logam, dan kaca.
+  - **Sampah Berbahaya:** Sampah yang mengandung bahan kimia atau komponen beracun.
+  - **Sampah Elektronik:** Mengacu pada sampah dari peralatan elektronik yang sudah tidak terpakai.
+  - **Sampah Organik:** Berupa sisa-sisa bahan organik seperti sisa makanan dan dedaunan.
+  - **Sampah yang Bisa Didaur Ulang:** Gambar-gambar yang menunjukkan bahan-bahan yang bisa diolah ulang menjadi produk baru.
+
+- **Struktur Data:**  
+  Data diorganisasikan dalam struktur folder, di mana folder utama telah dibagi menjadi 5 subfolder berdasarkan kategori yang telah ditetapkan. Ini memudahkan proses automatisasi data (misalnya melalui fungsi `tf.keras.preprocessing.image_dataset_from_directory`) dan analisis lebih lanjut.
+
+---
+
+### 4. Kondisi Data dan Insight Awal (Exploratory Data Analysis)
+
+Berikut beberapa tahapan yang telah dilakukan untuk memahami kondisi dataset:
+
+- **Penghitungan Jumlah Gambar per Kategori & Visualisasi Contoh Gambar per Kategori:**  
+  Dilakukan dengan menelusuri struktur folder untuk menghitung jumlah file gambar di masing-masing kategori dan memastikan kualitas dan variasi data, beberapa contoh gambar dari masing-masing kategori divisualisasikan, dengan menggunakan skrip Python berikut::**
+
+  ```python
+  import os
+import matplotlib.pyplot as plt
+from PIL import Image
+
+# Pastikan variabel dataset_path telah didefinisikan, contoh:
+# dataset_path = "/content/drive/MyDrive/Dataset Capstone Project"
+
+# Dapatkan daftar kategori (subfolder) dari dataset
+categories = os.listdir(dataset_path)
+print("Kategori yang ditemukan:", categories)
+
+# Inisialisasi dictionary untuk menyimpan jumlah gambar tiap kategori
+counts = {}
+
+# Iterasi setiap kategori dan proses file gambar
+for category in categories:
+    category_path = os.path.join(dataset_path, category)
+    image_files = []
+    # Cari file gambar secara rekursif
+    for root, dirs, files in os.walk(category_path):
+        for file in files:
+            if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_files.append(os.path.join(root, file))
+    
+    # Simpan jumlah gambar untuk kategori tersebut
+    counts[category] = len(image_files)
+    print(f"Kategori '{category}' memiliki {len(image_files)} gambar")
+    
+    # Jika ada gambar, tampilkan gambar pertama sebagai sampel
+    if image_files:
+        sample_image_path = image_files[0]
+        img = Image.open(sample_image_path)
+        plt.figure(figsize=(5, 5))
+        plt.imshow(img)
+        plt.title(f"Contoh gambar dari: {category}")
+        plt.axis('off')
+        plt.show()
+
+# Visualisasi distribusi data menggunakan bar chart
+plt.figure(figsize=(10, 6))
+plt.bar(counts.keys(), counts.values(), color='steelblue')
+plt.xlabel("Kategori")
+plt.ylabel("Jumlah Gambar")
+plt.title("Distribusi Gambar pada Dataset Final")
+plt.xticks(rotation=45)
+plt.show()
+
+  ```
+
+- **Insight Awal:**  
+  Dari hasil EDA:
+  - Teridentifikasi perbedaan jumlah gambar antar kategori, misalnya beberapa kategori mungkin memiliki jumlah gambar yang lebih sedikit dibandingkan yang lain.  
+  - Variasi kondisi (pencahayaan, latar belakang) dari gambar data nyata memberikan tantangan dalam generalisasi model, sehingga perlu dilakukan teknik augmentasi tambahan pada tahap selanjutnya.
+
+---
+
+### 4. Ringkasan Informasi Data
+
+- **Jumlah Gambar:**  
+  Total gambar terdiri dari:
+  - Sampah Anorganik: 6042 gambar  
+  - Sampah Berbahaya: 1256 gambar  
+  - Sampah Elektronik: 80 gambar  
+  - Sampah Organik: 1847 gambar  
+  - Sampah yang Bisa Didaur Ulang: 3034 gambar
+
+- **Kondisi Data:**  
+  Data memiliki variasi kondisi visual karena pengambilan gambar di lingkungan studio dan alam nyata. Ini mengarah pada tantangan dalam pengklasifikasian tetapi juga bermanfaat untuk meningkatkan generalisasi model.
+
+- **Fitur Utama:**  
+  Input berupa citra (JPEG/PNG) dan label kelas (5 kategori) yang telah diorganisasikan berdasarkan struktur folder.
+
+- **Sumber Data Asli:**  
+  - [Recyclable and Household Waste Classification](https://www.kaggle.com/datasets/alistairking/recyclable-and-household-waste-classification)  
+  - [RealWaste Dataset](https://www.kaggle.com/datasets/joebeachcapital/realwaste)
+
+- **Link Dataset Final:**  
+  Dataset final yang telah direstrukturisasi dan digabungkan dapat diakses di:
+  
+  [Dataset Capstone Project](https://drive.google.com/drive/folders/1iWAHYIqiK6B8bj5YJqCr98gAF50-hA4S?usp=drive_link)
+
+---
+
+Dokumentasi **Data Understanding** ini memberikan landasan yang kuat untuk melangkah ke tahap Data Preparation dan Modeling. Dengan memahami secara mendetail jumlah, kondisi, dan distribusi data, tim dapat merancang pipeline preprocessing dan strategi pelatihan model yang optimal guna mencapai performa terbaik dalam proyek capstone.
+
+---
+
