@@ -256,7 +256,169 @@ Berikut beberapa tahapan yang telah dilakukan untuk memahami kondisi dataset:
 
 ---
 
-Dokumentasi **Data Understanding** ini memberikan landasan yang kuat untuk melangkah ke tahap Data Preparation dan Modeling. Dengan memahami secara mendetail jumlah, kondisi, dan distribusi data, tim dapat merancang pipeline preprocessing dan strategi pelatihan model yang optimal guna mencapai performa terbaik dalam proyek capstone.
+## Data Preparation
+
+### 1. **Mounting dan Data Ingestion**
+
+**Apa yang Dilakukan:**  
+- **Mount Google Drive:** Mengakses dataset yang telah disimpan sehingga dapat dibaca oleh notebook.  
+- **Ingest Data:** Mengimpor file-file gambar dari struktur folder Google Drive.
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+
+import os
+
+# Menentukan path ke dataset final yang telah direstrukturisasi
+dataset_path = "/content/drive/MyDrive/Dataset Capstone Project"
+print("Isi folder dataset:", os.listdir(dataset_path))
+```
+
+**Alasan:**  
+Tahapan ini memastikan bahwa seluruh gambar dan file terkait dapat diakses secara konsisten, yang merupakan dasar untuk tahapan selanjutnya.
 
 ---
 
+### 2. **Data Cleaning dan Konsistensi**
+
+**Apa yang Dilakukan:**  
+- **Validasi Format File:** Mengecek ekstensi file (misalnya, JPEG, PNG) dan memastikan file-file yang korup atau tidak lengkap dihilangkan.  
+- **Struktur Folder:** Memastikan bahwa seluruh gambar telah terorganisir dengan benar ke dalam 5 kategori:  
+  - Sampah Anorganik  
+  - Sampah Berbahaya  
+  - Sampah Elektronik  
+  - Sampah Organik  
+  - Sampah yang Bisa Didaur Ulang
+
+```python
+for category in os.listdir(dataset_path):
+    category_path = os.path.join(dataset_path, category)
+    image_files = [f for f in os.listdir(category_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    print(f"{category}: {len(image_files)} gambar")
+```
+
+**Alasan:**  
+Membersihkan data sangat penting untuk menghindari error pada saat pelatihan model dan memastikan bahwa setiap gambar memenuhi standar yang ditetapkan.
+
+---
+
+### 3. **Resizing dan Normalisasi Gambar**
+
+**Apa yang Dilakukan:**  
+- **Resizing:** Semua gambar diubah ukurannya menjadi dimensi seragam (misalnya, 224×224 piksel) agar model dapat memproses input dengan bentuk yang konsisten.  
+- **Normalization:** Mengubah nilai pixel ke rentang [0, 1] (misalnya, dengan membagi nilai pixel dengan 255) untuk mempercepat konvergensi pelatihan.
+
+**Implementasi:**  
+Teknik ini bisa dilakukan saat pemuatan data menggunakan fungsi `tf.keras.preprocessing.image_dataset_from_directory` dan melalui layer `Rescaling` di dalam model.
+
+```python
+import tensorflow as tf
+
+img_height = 224
+img_width = 224
+batch_size = 32
+
+# Membuat dataset training dan validasi dengan resizing otomatis
+train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+    dataset_path,
+    validation_split=0.2,
+    subset="training",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size
+)
+
+val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+    dataset_path,
+    validation_split=0.2,
+    subset="validation",
+    seed=123,
+    image_size=(img_height, img_width),
+    batch_size=batch_size
+)
+
+# Normalisasi nilai pixel saat pelatihan dilakukan melalui layer:
+normalization_layer = tf.keras.layers.Rescaling(1./255)
+```
+
+**Alasan:**  
+Resizing memastikan keseragaman ukuran input, sementara normalisasi standar memudahkan model untuk belajar dengan mengatur skala data input sehingga setiap pixel memiliki kontribusi yang seimbang selama proses training.
+
+---
+
+### 4. **Data Splitting**
+
+**Apa yang Dilakukan:**  
+- **Pembagian Dataset:** Memisahkan dataset menjadi subset training dan validation untuk mengevaluasi performa model secara objektif.
+
+**Implementasi:**  
+Pada contoh di atas, parameter `validation_split` sudah mengatur pembagian data secara otomatis (misalnya, 80% data untuk training dan 20% data untuk validasi).
+
+**Alasan:**  
+Pembagian data penting untuk menghindari overfitting dan memastikan bahwa model diuji pada data yang tidak pernah dilihat selama pelatihan, sehingga kinerja model dapat diukur secara akurat.
+
+---
+
+### 5. **Data Augmentation**
+
+**Apa yang Dilakukan:**  
+- **Augmentasi Data:** Menerapkan teknik augmentasi (misalnya, flip horizontal, rotasi) untuk menambah keragaman data dan meningkatkan generalisasi model.
+
+```python
+data_augmentation = tf.keras.Sequential([
+    tf.keras.layers.RandomFlip("horizontal"),
+    tf.keras.layers.RandomRotation(0.2),
+])
+
+# Visualisasi contoh augmentasi
+import matplotlib.pyplot as plt
+
+for images, labels in train_ds.take(1):
+    augmented_images = data_augmentation(images)
+    plt.figure(figsize=(10, 10))
+    for i in range(9):
+        ax = plt.subplot(3, 3, i + 1)
+        plt.imshow(augmented_images[i].numpy().astype("uint8"))
+        plt.title(train_ds.class_names[labels[i]])
+        plt.axis("off")
+    plt.show()
+```
+
+**Alasan:**  
+Data augmentation meningkatkan keragaman dan jumlah data secara efektif tanpa perlu mengumpulkan gambar baru. Ini membantu model belajar fitur invariant terhadap translasi, rotasi, dan flip, sehingga meningkatkan performa pada data riil.
+
+---
+
+### 6. **Label Encoding**
+
+**Apa yang Dilakukan:**  
+- **Label Encoding Otomatis:** Karena data sudah tersusun dalam struktur folder, label diambil secara otomatis dari nama folder saat menggunakan `tf.keras.preprocessing.image_dataset_from_directory`.
+
+**Alasan:**  
+Pengambilan label secara otomatis dari struktur folder menyederhanakan proses dan memastikan konsistensi dalam pembuatan dataset, sehingga error pengkodean label dapat dihindari.
+
+---
+
+### Ringkasan Alasan dan Manfaat Data Preparation
+
+1. **Konsistensi Data:**  
+   Menjamin bahwa semua gambar memiliki dimensi yang sama dan nilai pixel yang ter-normalisasi, sehingga model dapat belajar secara konsisten.
+
+2. **Kualitas Data:**  
+   Proses cleaning dan validasi memastikan hanya data yang valid dan berkualitas yang digunakan, sehingga memperkecil risiko error saat pelatihan.
+
+3. **Generalitas Model:**  
+   Teknik data augmentation memperkaya keragaman dataset sehingga model dapat menggeneralisasi lebih baik terhadap data yang belum pernah dilihat sebelumnya.
+
+4. **Evaluasi Model:**  
+   Pembagian data ke dalam training dan validation memberikan kerangka untuk mengukur kinerja model secara objektif, mencegah overfitting dan memastikan robustenya model.
+
+5. **Efisiensi Proses:**  
+   Proses preprocessing yang terstruktur dan otomatis meningkatkan efisiensi pipeline training, sehingga mempercepat eksperimen dan iterasi model.
+
+---
+
+Dengan mengikuti tahapan-tahapan Data Preparation yang berurutan di atas, data yang digunakan dalam proyek ini dapat diproses dengan baik untuk mendukung pembangunan model machine learning yang robust dan akurat. Teknik-teknik ini tidak hanya meningkatkan kualitas data yang masuk ke dalam model, tetapi juga memberikan dasar yang kuat untuk evaluasi performa model di tahap selanjutnya.
+
+---
