@@ -175,21 +175,21 @@ Berikut beberapa tahapan yang telah dilakukan untuk memahami kondisi dataset:
 
   ```python
   import os
-import matplotlib.pyplot as plt
-from PIL import Image
+  import matplotlib.pyplot as plt
+  from PIL import Image
 
-# Pastikan variabel dataset_path telah didefinisikan, contoh:
-# dataset_path = "/content/drive/MyDrive/Dataset Capstone Project"
+  # Pastikan variabel dataset_path telah didefinisikan,
+  # dataset_path = "/content/drive/MyDrive/Dataset Capstone Project"
 
-# Dapatkan daftar kategori (subfolder) dari dataset
-categories = os.listdir(dataset_path)
-print("Kategori yang ditemukan:", categories)
+  # Dapatkan daftar kategori (subfolder) dari dataset
+  categories = os.listdir(dataset_path)
+  print("Kategori yang ditemukan:", categories)
 
-# Inisialisasi dictionary untuk menyimpan jumlah gambar tiap kategori
-counts = {}
+  # Inisialisasi dictionary untuk menyimpan jumlah gambar tiap kategori
+  counts = {}
 
-# Iterasi setiap kategori dan proses file gambar
-for category in categories:
+  # Iterasi setiap kategori dan proses file gambar
+  for category in categories:
     category_path = os.path.join(dataset_path, category)
     image_files = []
     # Cari file gambar secara rekursif
@@ -212,16 +212,15 @@ for category in categories:
         plt.axis('off')
         plt.show()
 
-# Visualisasi distribusi data menggunakan bar chart
-plt.figure(figsize=(10, 6))
-plt.bar(counts.keys(), counts.values(), color='steelblue')
-plt.xlabel("Kategori")
-plt.ylabel("Jumlah Gambar")
-plt.title("Distribusi Gambar pada Dataset Final")
-plt.xticks(rotation=45)
-plt.show()
-
-  ```
+    # Visualisasi distribusi data menggunakan bar chart
+    plt.figure(figsize=(10, 6))
+    plt.bar(counts.keys(), counts.values(), color='steelblue')
+    plt.xlabel("Kategori")
+    plt.ylabel("Jumlah Gambar")
+    plt.title("Distribusi Gambar pada Dataset Final")
+    plt.xticks(rotation=45)
+    plt.show()
+    ```
 
 - **Insight Awal:**  
   Dari hasil EDA:
