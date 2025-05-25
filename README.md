@@ -235,7 +235,7 @@ Berikut beberapa tahapan yang telah dilakukan untuk memahami kondisi dataset:
   Total gambar terdiri dari:
   - Sampah Anorganik: 6042 gambar  
   - Sampah Berbahaya: 1256 gambar  
-  - Sampah Elektronik: 80 gambar  
+  - Sampah Elektronik: 208 gambar  
   - Sampah Organik: 1847 gambar  
   - Sampah yang Bisa Didaur Ulang: 3034 gambar
 
